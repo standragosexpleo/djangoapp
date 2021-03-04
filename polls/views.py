@@ -3,39 +3,77 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
-
+from django.shortcuts import render, redirect
 from .models import Choice, Question
+from .forms import *
+from PIL import Image
 
-class IndexView(generic.ListView):
+
+def index_view(request):
     template_name = 'polls/index.html'
     context_object_name = 'latest_question_list'
+    latest_question_list = Question.objects.filter(pub_date__lte=timezone.now()).order_by('-pub_date')[:5]
+    return render(request, template_name, {'latest_question_list': latest_question_list})
 
-    def get_queryset(self):
-        """
-        Return the last five published questions (not including those set to be
-        published in the future).
-        """
-        return Question.objects.filter(
-            pub_date__lte=timezone.now()
-        ).order_by('-pub_date')[:5]
+
+def convert_pixel(r, g, b, a=1):
+    color = "#%02X%02X%02X" % (r, g, b)
+    opacity = a
+    return color, opacity
+
+
+def upload_and_save_svg_view(request):
+    if request.method == 'POST':
+        form = PhotoForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            form.save()
+            image = Image.open('polls/images/' + str(request.FILES['photo']))
+            mode = image.mode
+            pixels = image.load()
+            width, height = image.size
+            svg_name = str(request.FILES['photo'])[:-4] + ".svg"
+            if "RGB" in mode:
+                output = "<svg width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\" xmlns=\"http://www.w3.org/2000/svg\">" % (
+                width, height, width, height)
+
+                for r in range(height):
+                    for c in range(width):
+                        color, opacity = convert_pixel(*pixels[c, r])
+                        output += "<rect x=\"%d\" y=\"%d\" width=\"1\" height=\"1\" fill=\"%s\" fill-opacity=\"%s\"/>" % (
+                        c, r, color, opacity)
+
+                output += "</svg>"
+
+                with open('polls/images/' + svg_name, "w") as f:
+                    f.write(output)
+            return render(request, 'polls/download.html', {'svg_name': svg_name})
+    else:
+        form = PhotoForm()
+    return render(request, 'polls/upload.html', {'form': form})
+
 
 class DetailView(generic.DetailView):
     model = Question
     template_name = 'polls/detail.html'
+
     def get_queryset(self):
         """
         Update the model, excluding any questions that aren't published yet.
         """
         return Question.objects.filter(pub_date__lte=timezone.now())
 
+
 class ResultsView(generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
+
     def get_queryset(self):
         """
         Excludes any questions that aren't published yet.
         """
         return Question.objects.filter(pub_date__lte=timezone.now())
+
 
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
