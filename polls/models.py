@@ -31,3 +31,10 @@ class Choice(models.Model):
 
     def __str__(self):
         return self.choice_text
+
+
+class Quote(models.Model):
+    quote_text = models.CharField(max_length=200)
+
+    class Meta:
+        pass

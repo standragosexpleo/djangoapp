@@ -8,6 +8,10 @@ from .models import Choice, Question
 from .forms import *
 from PIL import Image
 from polls.face_recognition import get_emotion
+import random
+import speech_recognition as sr
+from django.views.decorators.csrf import csrf_exempt
+import pyaudio
 
 
 def index_view(request):
@@ -65,6 +69,40 @@ def upload_and_recognize_emotion(request):
     else:
         form = PhotoForm()
     return render(request, 'polls/upload_recg.html', {'form': form})
+
+
+@csrf_exempt
+def search(request):
+
+    # logic of view will be implemented here
+    # if request.method == 'GET':
+    # word = request.POST.get("your_word", "")
+    # print(word)
+    recognizer = sr.Recognizer()
+    ''' recording the sound '''
+    with sr.Microphone() as source:
+        print("Adjusting noise ")
+        recognizer.adjust_for_ambient_noise(source, duration=1)
+        print("Recording for 4 seconds")
+        recorded_audio = recognizer.listen(source, timeout=4)
+        print("Done recording")
+    ''' Recorgnizing the Audio '''
+    try:
+        print("Recognizing the text")
+        text = recognizer.recognize_google(
+            recorded_audio,
+            language="en-EN"
+        )
+        print("Decoded Text : {}".format(text))
+    except Exception as ex:
+        print(ex)
+    quotes = Quote.objects.filter(quote_text__contains=text.upper())
+    if len(quotes) == 0:
+        quote = "No quote found for " + str(text) + "."
+    else:
+        random_number = random.randint(0, len(quotes))
+        quote = quotes[random_number].quote_text
+    return render(request, "polls/search_bar.html", {'quote': text})
 
 
 class DetailView(generic.DetailView):
