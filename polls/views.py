@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from .models import Choice, Question
 from .forms import *
 from PIL import Image
-from polls.face_recognition import get_emotion
+# from polls.face_recognition import get_emotion
 import random
 import speech_recognition as sr
 from django.views.decorators.csrf import csrf_exempt
@@ -58,17 +58,17 @@ def upload_and_save_svg_view(request):
     return render(request, 'polls/upload.html', {'form': form})
 
 
-def upload_and_recognize_emotion(request):
-    if request.method == 'POST':
-        form = PhotoForm(request.POST, request.FILES)
+# def upload_and_recognize_emotion(request):
+#     if request.method == 'POST':
+#         form = PhotoForm(request.POST, request.FILES)
 
-        if form.is_valid():
-            form.save()
-            emotion = get_emotion('polls/images/' + str(request.FILES['photo']))
-            return render(request, 'polls/recognition.html', {'emotion': emotion})
-    else:
-        form = PhotoForm()
-    return render(request, 'polls/upload_recg.html', {'form': form})
+#         if form.is_valid():
+#             form.save()
+#             emotion = get_emotion('polls/images/' + str(request.FILES['photo']))
+#             return render(request, 'polls/recognition.html', {'emotion': emotion})
+#     else:
+#         form = PhotoForm()
+#     return render(request, 'polls/upload_recg.html', {'form': form})
 
 
 @csrf_exempt
