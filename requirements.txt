@@ -3,3 +3,5 @@ whitenoise
 psycopg2-binary
 Pillow
 opencv-python
+SpeechRecognition
+PyAudio
