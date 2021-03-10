@@ -11,7 +11,6 @@ from PIL import Image
 import random
 import speech_recognition as sr
 from django.views.decorators.csrf import csrf_exempt
-import pyaudio
 
 
 def index_view(request):
